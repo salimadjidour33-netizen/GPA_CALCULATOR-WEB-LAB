@@ -24,6 +24,18 @@
 23 // Submit via AJAX
 24 $ (’# gpaForm ’) . submit ( function ( e ) {
 25 e . preventDefault () ;
+75 }
+76 } ,
+77 error : function () {
+78 $ (’# result ’) . html (
+79 ’<div class =" alert alert - danger " >’ +
+80 ’Server error occurred .’ +
+81 ’ </div >’
+82 ) ;
+83 }
+84 }) ;
+85 }) ;
+86 }) ;  
 26
 27 // Client - side validation
 28 var valid = true ;
