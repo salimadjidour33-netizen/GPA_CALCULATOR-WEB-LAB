@@ -1,41 +1,75 @@
-function addCourse () {
-2 var row = document . createElement (’div ’) ;
-3 row . className = ’course - row ’;
-4 row . innerHTML =
-5 ’<label > Course : </ label >’ +
-6 ’<input type =" text " name =" course []" ’ +
-7 ’placeholder ="e.g. Mathematics " required >’ +
-8 ’<label > Credits : </ label >’ +
-9 ’<input type =" number " name =" credits []" ’ +
-10 ’placeholder ="e.g. 3" min ="1" required >’ +
-11 ’<label > Grade : </ label >’ +
-12 ’<select name =" grade []" > ’ +
-’<option value ="4.0" >A </ option >’ +
-14 ’<option value ="3.0" >B </ option >’ +
-15 ’<option value ="2.0" >C </ option >’ +
-16 ’<option value ="1.0" >D </ option >’ +
-17 ’<option value ="0.0" >F </ option >’ +
-18 ’ </ select >’ +
-19 ’<button type =" button " ’ +
-20 ’onclick =" this . parentNode . remove ()" >Remove </ button >’;
-21 document . getElementById (’courses ’) . appendChild ( row ) ;
-22 }
-23
-24 function validateForm () {
-25 var courses = document . querySelectorAll (’[ name =" course []"] ’) ;
-26 var credits = document . querySelectorAll (’[ name =" credits []"] ’) ;
-27
-28 for ( var i = 0; i < courses . length ; i ++) {
-29 if ( courses [ i ]. value === "") {
-30 alert ("All course name fields are required .") ;
-31 return false ;
-32 }
-33 }
-34 for ( var j = 0; j < credits . length ; j ++) {
-35 if ( isNaN ( credits [j ]. value ) || credits [ j ]. value <= 0) {
-36 alert (" Credit hours must be positive numbers .") ;
-37 return false ;
-38 }
-39 }
-40 return true ;
-41 }
+
+1 $ ( document ) . ready ( function () {
+2
+3 // Add a new course row
+4 $ (’# addCourse ’) . click ( function () {
+5 var row = $ (’.course - row ’) . first () . clone () ;
+6 row . find (’input ’) . val (’’) ;
+7 row . append (
+8 ’<div class =" col - auto " >’ +
+9 ’<button type =" button " ’ +
+10 ’class =" btn btn - danger remove -row " >X </ button >’ +
+11 ’ </div >’
+  12 ) ;
+13 $ (’# courses ’) . append ( row ) ;
+14 }) ;
+15
+16 // Remove a course row
+17 $ ( document ) . on (’click ’, ’.remove - row ’, function () {
+18 if ( $ (’.course -row ’) . length > 1) {
+19 $ ( this ) . closest (’.course -row ’) . remove () ;
+20 }
+21 }) ;
+22
+23 // Submit via AJAX
+24 $ (’# gpaForm ’) . submit ( function ( e ) {
+25 e . preventDefault () ;
+26
+27 // Client - side validation
+28 var valid = true ;
+29 $ (’[ name =" course []"] ’) . each ( function () {
+30 if ( $ ( this ) . val () . trim () === ’’) valid = false ;
+31 }) ;
+32 $ (’[ name =" credits []"] ’) . each ( function () {
+33 if ( isNaN ( $ ( this ) . val () ) || parseFloat ( $ ( this ) . val () ) <= 0) {
+34 valid = false ;
+35 }
+36 }) ;
+37 if (! valid ) {
+38 $ (’# result ’) . html (
+39 ’<div class =" alert alert - warning " >’ +
+40 ’Please enter valid values in all fields .’ +
+41 ’ </div >’
+42 ) ;
+43 return ;
+44 }
+45
+46 $ . ajax ({
+47 url : ’calculate .php ’,
+48 type : ’POST ’,
+49 data : $ ( this ) . serialize () ,
+50 dataType : ’json ’,
+51 success : function ( response ) {
+52 if ( response . success ) {
+53 var alertClass = ’alert - info ’;
+54 if ( response . gpa >= 3.7) {
+55 alertClass = ’alert - success ’;
+56 } else if ( response . gpa >= 3.0) {
+57 alertClass = ’alert - info ’;
+58 } else if ( response . gpa >= 2.0) {
+59 alertClass = ’alert - warning ’;
+60 } else {
+61 alertClass = ’alert - danger ’;
+62 }
+63 $ (’# result ’) . html (
+64 ’<div class =" alert ’ + alertClass + ’" >’ +
+65 response . message +
+66 ’ </div >’ +
+67 response . tableHtml
+68 ) ;
+69 } else {
+70 $ (’# result ’) . html (
+71 ’<div class =" alert alert - danger " >’ +
+72 response . message +
+73 ’ </div >’
+74 ) ;
